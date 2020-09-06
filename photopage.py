@@ -9,7 +9,7 @@ from PIL import Image, ImageTk
 import multiprocessing
 winheight = 0
 winwidth = 0
-imagelist = ["image1.jpg","image2.jpg","image3.jpg","image4.jpg","image5.jpg","image6.jpg","image7.jpg","image8.jpg"]
+imagelist = ["image1.jpg","image2.jpg","image3.jpg","image4.jpg","image5.jpg","image6.jpg","image7.jpg","image8.jpg","image9.jpg","image10.jpg","image11.jpg","image12.jpg"]
 class photopage():
     def __init__(self,master,_winheight,_winwidth):
         
@@ -19,13 +19,12 @@ class photopage():
         self.photopadding = self.winwidth/64
         self.master = master
         self.imagereadlist=[]
-        self.numlist = [0,1,2,3,4,5,6,7,8]
         self.topheight = 130 #顶部标题高度
         self.backbtnheight = self.topheight/2
-        self.backbtnwidth = self.backbtnheight*3/2
+        self.backbtnwidth = self.backbtnheight
         self.backbtnpadding = self.topheight/4 #顶部按钮的间距
         #读取图片
-        for n in range(0,8):
+        for n in range(0,len(imagelist)):
             self.imagereadlist.append(ImageTk.PhotoImage(self.goodimage(n)))
         self.backimg = ImageTk.PhotoImage(Image.open("srcimage/toleft.jpg").resize((int(self.backbtnwidth),int(self.backbtnheight)))) 
         self.photopage=tk.Frame(self.master,width=self.winwidth,height=self.winheight)
@@ -36,7 +35,8 @@ class photopage():
         #返回按钮
         self.backbtn = tk.Button(self.photocanvas,image = self.backimg,height=self.backbtnheight,width=self.backbtnwidth,command=self.back)
         self.backbtn.place(x=self.backbtnpadding,y=self.backbtnpadding) 
-        for n in range(0,8):
+        #图片缩略图放置
+        for n in range(0,len(imagelist)):
             locals()['self.tempbutton'+str(n)] = tk.Button(self.photocanvas,image=self.imagereadlist[n], width=self.photowidth,height=self.photowidth,command=self.returnfun(n),bd=0)
             locals()['self.tempbutton'+str(n)].place(x=n%7*(self.photowidth+self.photopadding)+self.photopadding,y=int((n+1)/8)*(self.photowidth+self.photopadding)+self.topheight)
     def video(self,):

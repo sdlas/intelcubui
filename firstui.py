@@ -10,6 +10,7 @@ import multiprocessing
 import math
 from videopage import videopage #视频播放界面
 from photopage import photopage #相册界面
+from musicpage import musicpage #音乐界面
 winwidth = 0
 winheight = 0
 
@@ -63,7 +64,7 @@ class initface():
         self.buttonA_1.place(x=self.move[0][0],y=self.move[0][1])
         self.buttonA_2 = tk.Button(self.initface,image=self.movieimage,height=self.btnwidth,width=self.btnwidth,relief="ridge",command=self.gotovideo)
         self.buttonA_2.place(x=self.move[1][0],y=self.move[1][1])
-        self.buttonA_3 = tk.Button(self.initface,image=self.musicimage,height=self.btnwidth,width=self.btnwidth,relief="ridge")
+        self.buttonA_3 = tk.Button(self.initface,image=self.musicimage,height=self.btnwidth,width=self.btnwidth,relief="ridge",command=self.gotomusic)
         self.buttonA_3.place(x=self.move[2][0],y=self.move[2][1])
         # 交大的校徽
         self.titleCanvas = tk.Canvas(self.initface,width=self.Bigbtnwidth,height=winheight/6)
@@ -84,13 +85,14 @@ class initface():
         #刷新显示图片
         self.showtitle()
 
-    def gotovideo(self,):       
+    def gotovideo(self):       
         #self.initface.destroy()
         videopage(self.master,winheight,winwidth)
-        initface(self.master)
-    def gotophoto(self,):
+    def gotophoto(self):
         #self.initface.destroy()
         photopage(self.master,winheight,winwidth)
+    def gotomusic(self):
+        musicpage(self.master,winheight,winwidth)
     #播放音乐
     def play_music(threadName, delay):
             filepath = r"D:\music\test.mp3"
