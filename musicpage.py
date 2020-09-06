@@ -7,12 +7,23 @@ from tkinter import *
 import cv2
 from PIL import Image, ImageTk
 import multiprocessing
+import os.path
+import glob
 winheight = 0
 winwidth = 0
-musiclist = ["music1.jpg","music2.jpg","music3.jpg","music4.jpg","music5.jpg"]
+musiclist = ["music1.mp3","music2.mp3","music3.mp3","music4.mp3","music5.mp3"]
 class musicpage():
     def __init__(self,master,_winheight,_winwidth):
         
+        #获取本地音乐文件
+        self.extensionlist = ['mp3','flac']
+        self.musiclist = []
+        for extension in self.extensionlist: 
+            file_list = glob.glob('music/*.'+extension) #返回一个列表
+            for item  in file_list:
+                self.musiclist.append(item[6:])
+        
+        #尺寸变量
         self.winheight = _winheight
         self.winwidth = _winwidth
         self.photopadding = self.winwidth/128
@@ -30,6 +41,8 @@ class musicpage():
         self.pausebtnmovey = (self.photoheight-self.pausebtnwidth)/2
         self.pausebtnmovex = self.photowidth-30-self.pausebtnwidth
         self.curid = -1
+        self.pausemusicflag = False #是否有音乐暂停
+        self.pausemusicid = -1 #暂停的音乐id
         #读取图片
         self.backimg = ImageTk.PhotoImage(Image.open("srcimage/toleft.jpg").resize((int(self.backbtnwidth),int(self.backbtnheight)))) 
         self.pauseimg = ImageTk.PhotoImage(Image.open("srcimage/pause.jpg").resize((int(self.pausebtnwidth),int(self.pausebtnwidth)))) 
@@ -45,10 +58,10 @@ class musicpage():
         self.Canvaslist = []
         self.pausebtnlist = []
         #图片缩略图放置
-        for n in range(0,len(musiclist)):
+        for n in range(0,len(self.musiclist)):
             self.Canvaslist.append(tk.Canvas(self.photocanvas,bg="white", width=int(self.photowidth),height=int(self.photoheight)))
             self.Canvaslist[n].place(x=self.photomovex,y=n*(self.photoheight+self.photopadding)+self.topheight)
-            self.Canvaslist[n].create_text(self.photowidth/2,self.photoheight/2,text="啊啊啊啊啊啊啊",font=("黑体",25))
+            self.Canvaslist[n].create_text(self.photowidth/2,self.photoheight/2,text=self.musiclist[n],font=("黑体",25))
             self.pausebtnlist.append(tk.Button(self.Canvaslist[n],image = self.playimg,width=self.pausebtnwidth,height=self.pausebtnwidth,command=self.returnfun(n)))
             self.pausebtnlist[n].place(x=self.pausebtnmovex,y=self.pausebtnmovey)
     def back(self):
@@ -56,41 +69,49 @@ class musicpage():
         #self.vbar.destory()
     #选中要播放的音乐
     def choosemusic(self,x):
-        _thread.start_new_thread( self.playmusic, ("Thread", x))
         if x==self.curid:
+            #暂停正在播放的歌曲
             self.curid=-1
             self.pausebtnlist[x].config(image=self.playimg)
+            self.pausemusic(x)
             return
         self.curid = x
         for n in range(0,len(self.pausebtnlist)):
+            #
             if n!=self.curid:
                 self.pausebtnlist[n].config(image=self.playimg)
             else:
                 self.pausebtnlist[n].config(image=self.pauseimg)
-        # if self.curid!=-1:
-        #     self.pausebtnlist[self.curid].config(image=self.playimg)
-        # if self.curid!=x:
-        #     self.curid = x
-        #     self.pausebtnlist[x].config(image=self.pauseimg)
-        # else:
-        #     self.pausebtnlist[x].config(image=self.pauseimg)
-        #locals()['self.temppausebtn'+str(x+1)].config(image=self.playimg)
+                if self.pausemusicflag and self.pausemusicid==self.curid:
+                    self.unpausemusic()
+                else:
+                    _thread.start_new_thread( self.playmusic, ("Thread", x))
+    #返回函数
     def returnfun(self,x):
         return lambda:self.choosemusic(x)
     #播放音乐
     def playmusic(self,threadname,x):
-        filepath = "music/music1.mp3"
+        #切换歌曲要恢复设置
+        self.pausemusicflag = False 
+        self.pausemusicid = -1
+        filepath = "music/"+self.musiclist[x]
         py.mixer.init()
         # 加载音乐
         py.mixer.music.load(filepath)
-        py.mixer.music.play(start=0.0)
+        py.mixer.music.play(loops=-1,start=0.0)
         #播放时长，没有此设置，音乐不会播放，会一次性加载完
         time.sleep(300)
         py.mixer.music.stop()
+        #播放完后根据循环方式选择播放方式播放歌曲\
     #暂停音乐
     def pausemusic(self,x):
-        pass
-
+        self.pausemusicid = x
+        self.pausemusicflag = True
+        py.mixer.music.pause()
+    #恢复播放
+    def unpausemusic(self):
+        self.pausemusicflag = False
+        py.mixer.music.unpause()
 if __name__ == '__main__':    
     root = tk.Tk()
     root.attributes("-fullscreen",True)

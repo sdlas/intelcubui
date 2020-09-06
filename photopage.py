@@ -7,11 +7,18 @@ from tkinter import *
 import cv2
 from PIL import Image, ImageTk
 import multiprocessing
+import glob
 winheight = 0
 winwidth = 0
-imagelist = ["image1.jpg","image2.jpg","image3.jpg","image4.jpg","image5.jpg","image6.jpg","image7.jpg","image8.jpg","image9.jpg","image10.jpg","image11.jpg","image12.jpg"]
 class photopage():
     def __init__(self,master,_winheight,_winwidth):
+        #获取本地图片文件
+        self.extensionlist = ['jpg']
+        self.imagelist = []
+        for extension in self.extensionlist: 
+            file_list = glob.glob('photos/*.'+extension) #返回一个列表
+            for item  in file_list:
+                self.imagelist.append(item[7:])
         
         self.winheight = _winheight
         self.winwidth = _winwidth
@@ -24,7 +31,7 @@ class photopage():
         self.backbtnwidth = self.backbtnheight
         self.backbtnpadding = self.topheight/4 #顶部按钮的间距
         #读取图片
-        for n in range(0,len(imagelist)):
+        for n in range(0,len(self.imagelist)):
             self.imagereadlist.append(ImageTk.PhotoImage(self.goodimage(n)))
         self.backimg = ImageTk.PhotoImage(Image.open("srcimage/toleft.jpg").resize((int(self.backbtnwidth),int(self.backbtnheight)))) 
         self.photopage=tk.Frame(self.master,width=self.winwidth,height=self.winheight)
@@ -36,7 +43,7 @@ class photopage():
         self.backbtn = tk.Button(self.photocanvas,image = self.backimg,height=self.backbtnheight,width=self.backbtnwidth,command=self.back)
         self.backbtn.place(x=self.backbtnpadding,y=self.backbtnpadding) 
         #图片缩略图放置
-        for n in range(0,len(imagelist)):
+        for n in range(0,len(self.imagelist)):
             locals()['self.tempbutton'+str(n)] = tk.Button(self.photocanvas,image=self.imagereadlist[n], width=self.photowidth,height=self.photowidth,command=self.returnfun(n),bd=0)
             locals()['self.tempbutton'+str(n)].place(x=n%7*(self.photowidth+self.photopadding)+self.photopadding,y=int((n+1)/8)*(self.photowidth+self.photopadding)+self.topheight)
     def video(self,):
@@ -59,11 +66,11 @@ class photopage():
         self.photopage.destroy()
         #self.vbar.destory()
     def showbigimage(self,x):
-        bigimage(self.photocanvas,x,self.winheight,self.winwidth)
+        bigimage(self.photocanvas,x,self.winheight,self.winwidth,self.imagelist)
     def returnfun(self,x):
         return lambda:self.showbigimage(x)
     def goodimage(self,id):
-        tempimage = Image.open("photos/"+imagelist[id])
+        tempimage = Image.open("photos/"+self.imagelist[id])
         imgwidth = tempimage.size[0]
         imgheight = tempimage.size[1]
         imgscale = imgwidth/imgheight
@@ -75,7 +82,8 @@ class photopage():
             tempimage = tempimage.resize((int(self.photowidth),int(self.photowidth/imgscale)))
         return tempimage
 class bigimage():
-    def __init__(self,master,id,_winheight,_winwidth):
+    def __init__(self,master,id,_winheight,_winwidth,imagelist):
+        self.imagelist =imagelist
         self.winwidth = _winwidth
         self.winheight = _winheight
         self.curid = id
@@ -114,11 +122,11 @@ class bigimage():
         
         self.showimage()
     def changeright(self):
-        self.curid = (self.curid+1)%len(imagelist)
+        self.curid = (self.curid+1)%len(self.imagelist)
         self.showimg =  ImageTk.PhotoImage(self.goodimage(self.curid)) 
         self.pos = self.rightpos(self.curid)
     def changeleft(self):
-        self.curid = (self.curid-1)%len(imagelist)
+        self.curid = (self.curid-1)%len(self.imagelist)
         self.showimg =  ImageTk.PhotoImage(self.goodimage(self.curid)) 
         self.pos = self.rightpos(self.curid)
     def close(self):
@@ -140,7 +148,7 @@ class bigimage():
         cv2.destroyAllWindows()
     #返回合适比例的图片
     def goodimage(self,id):
-        tempimage = Image.open("photos/"+imagelist[id])
+        tempimage = Image.open("photos/"+self.imagelist[id])
         imgwidth = tempimage.size[0]
         imgheight = tempimage.size[1]
         imgscale = imgwidth/imgheight
@@ -153,7 +161,7 @@ class bigimage():
         return tempimage
     #返回图片适合的放置位置
     def rightpos(self,id):
-        tempimage = Image.open("photos/"+imagelist[id])
+        tempimage = Image.open("photos/"+self.imagelist[id])
         imgwidth = tempimage.size[0]
         imgheight = tempimage.size[1]
         imgscale = imgwidth/imgheight
