@@ -8,6 +8,7 @@ import cv2
 from PIL import Image, ImageTk
 import multiprocessing
 import glob
+from backbtn import backbtn
 winheight = 0
 winwidth = 0
 class photopage():
@@ -27,41 +28,20 @@ class photopage():
         self.master = master
         self.imagereadlist=[]
         self.topheight = 130 #顶部标题高度
-        self.backbtnheight = self.topheight/2
-        self.backbtnwidth = self.backbtnheight
-        self.backbtnpadding = self.topheight/4 #顶部按钮的间距
         #读取图片
         for n in range(0,len(self.imagelist)):
             self.imagereadlist.append(ImageTk.PhotoImage(self.goodimage(n)))
-        self.backimg = ImageTk.PhotoImage(Image.open("srcimage/toleft.jpg").resize((int(self.backbtnwidth),int(self.backbtnheight)))) 
         self.photopage=tk.Frame(self.master,width=self.winwidth,height=self.winheight)
         self.photopage.place(x=0,y=0)
         self.photocanvas = tk.Canvas(self.photopage,bg="pink",width=self.winwidth,height=self.winheight)
         self.photocanvas.place(x=0,y=0)
         self.photocanvas.configure(highlightthickness=0)
-        #返回按钮
-        self.backbtn = tk.Button(self.photocanvas,image = self.backimg,height=self.backbtnheight,width=self.backbtnwidth,command=self.back)
-        self.backbtn.place(x=self.backbtnpadding,y=self.backbtnpadding) 
         #图片缩略图放置
         for n in range(0,len(self.imagelist)):
             locals()['self.tempbutton'+str(n)] = tk.Button(self.photocanvas,image=self.imagereadlist[n], width=self.photowidth,height=self.photowidth,command=self.returnfun(n),bd=0)
             locals()['self.tempbutton'+str(n)].place(x=n%7*(self.photowidth+self.photopadding)+self.photopadding,y=int((n+1)/8)*(self.photowidth+self.photopadding)+self.topheight)
-    def video(self,):
-        def video_loop():
-            try:
-                while True:
-                    picture1=self.im
-                    self.canvas1.create_image(0,0,anchor='nw',image=picture1)  
-                    #canvas4.create_image(0,0,anchor='nw',image=picture1) 
-                    self.face2.update_idletasks()  #最重要的更新是靠这两句来实现
-                    self.face2.update()
-            except:
-                self.back(0)
-            
-        video_loop()
-        #self.face1.mainloop()
-        self.vc1.release()
-        cv2.destroyAllWindows()
+        backbtn(self.photopage,self.winheight,self.winwidth)
+
     def back(self):
         self.photopage.destroy()
         #self.vbar.destory()

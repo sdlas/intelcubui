@@ -10,6 +10,7 @@ import cv2
 from PIL import Image, ImageTk
 import multiprocessing
 from moviepy.editor import*
+from backbtn import backbtn #返回按钮
 
 window_width=960
 window_height=620
@@ -31,9 +32,6 @@ class videopage():
         self.videowidth = self.winwidth/8
         self.videopadding = self.winwidth/64
         self.topheight = 130 #顶部标题高度
-        self.backbtnheight = self.topheight/2
-        self.backbtnwidth = self.backbtnheight
-        self.backbtnpadding = self.topheight/4 #顶部按钮的间距
 
         self.videopage = tk.Frame(self.master,height=self.winheight,width=self.winwidth)
         self.videopage.place(x=0,y=0)
@@ -44,14 +42,11 @@ class videopage():
         # 视频集画框
         self.videocanvas = tk.Canvas(self.videopage,bg="pink",height=self.winheight,width=self.winwidth)
         self.videocanvas.place(x=0,y=0)
-        #返回按钮
-        self.backimg = ImageTk.PhotoImage(Image.open("srcimage/toleft.jpg").resize((int(self.backbtnwidth),int(self.backbtnheight)))) 
-        self.backbtn = tk.Button(self.videocanvas,image = self.backimg,height=self.backbtnheight,width=self.backbtnwidth,command=self.back)
-        self.backbtn.place(x=self.backbtnpadding,y=self.backbtnpadding) 
         # 视频缩略图放置
         for n in range(0,len(videolist)):
             locals()['self.tempbutton'+str(n)] = tk.Button(self.videocanvas,image=self.firstimagelist[n], width=self.videowidth,height=self.videowidth,command=self.returnfun(n),bd=0)
             locals()['self.tempbutton'+str(n)].place(x=n%7*(self.videowidth+self.videopadding)+self.videopadding,y=int((n+1)/8)*(self.videowidth+self.videopadding)+self.topheight)
+        backbtn(self.videopage,self.winheight,self.winwidth)   
     def playvideo(self,x):
         showvideo(self.videopage,x,self.winheight,self.winwidth)
     def returnfun(self,x):
