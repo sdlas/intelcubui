@@ -9,11 +9,11 @@ from PIL import Image, ImageTk
 import multiprocessing
 import os.path
 import glob
+from backbtn import backbtn #返回按钮
+from title import title
+from background import background
 winheight = 0
 winwidth = 0
-musiclist = [
-    "music1.mp3", "music2.mp3", "music3.mp3", "music4.mp3", "music5.mp3"
-]
 
 
 class musicpage():
@@ -57,29 +57,24 @@ class musicpage():
         self.playimg = ImageTk.PhotoImage(
             Image.open("srcimage/play.jpg").resize(
                 (int(self.pausebtnwidth), int(self.pausebtnwidth))))
-        self.musicpage = tk.Frame(self.master,
-                                  width=self.winwidth,
-                                  height=self.winheight)
-        self.musicpage.place(x=0, y=0)
-        self.photocanvas = tk.Canvas(self.musicpage,
+        self.musicpage = tk.Canvas(self.master,
                                      bg="pink",
                                      width=self.winwidth,
                                      height=self.winheight)
-        self.photocanvas.place(x=0, y=0)
-        self.photocanvas.configure(highlightthickness=0)
+        self.musicpage.place(x=0, y=0)
+        self.musicpage.configure(highlightthickness=0)
+         #背景
+        bg = background(self.musicpage,self.winheight,self.winwidth,"call")
         #返回按钮
-        self.backbtn = tk.Button(self.photocanvas,
-                                 image=self.backimg,
-                                 height=self.backbtnheight,
-                                 width=self.backbtnwidth,
-                                 command=self.back)
-        self.backbtn.place(x=self.backbtnpadding, y=self.backbtnpadding)
+        backbtn(self.musicpage,self.winheight,self.winwidth)
+        #标题
+        title(self.musicpage,self.winheight,self.winwidth,"播放音乐")
         self.Canvaslist = []
         self.pausebtnlist = []
         #图片缩略图放置
         for n in range(0, len(self.musiclist)):
             self.Canvaslist.append(
-                tk.Canvas(self.photocanvas,
+                tk.Canvas(self.musicpage,
                           bg="white",
                           width=int(self.photowidth),
                           height=int(self.photoheight)))
@@ -98,7 +93,7 @@ class musicpage():
                           command=self.returnfun(n)))
             self.pausebtnlist[n].place(x=self.pausebtnmovex,
                                        y=self.pausebtnmovey)
-
+        bg.showimage()
     def back(self):
         self.musicpage.destroy()
         #self.vbar.destory()

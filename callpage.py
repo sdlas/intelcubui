@@ -24,7 +24,7 @@ class callpage():
         #返回按钮
         backbtn(self.callpage,self.winheight,self.winwidth)
         #标题
-        title(self.callpage,self.winheight,self.winwidth,"call")
+        title(self.callpage,self.winheight,self.winwidth,"打电话给家人")
         self.childlist = ["firstson","secondson","thirdson"]
         self.avatarimagelist = [] #头像放置
         self.avatarlabellist = []

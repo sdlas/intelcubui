@@ -1,10 +1,12 @@
-import tkinter as tk
+from mttkinter import mtTkinter as tk
 import tkinter.colorchooser
 import pygame as py
 import time
 import _thread
 from tkinter import *
 import serial
+import pyqtgraph as pg
+import array
 import cv2
 from PIL import Image, ImageTk
 import multiprocessing
@@ -13,6 +15,8 @@ from videopage import videopage  #视频播放界面
 from photopage import photopage  #相册界面
 from musicpage import musicpage  #音乐界面
 from callpage import callpage  #拨打电话界面
+from hearto2page import hearto2page #血氧浓度检测
+from heartpage import heartpage #心率测量
 winwidth = 0
 winheight = 0
 
@@ -40,7 +44,7 @@ class initface():
         self.initface.pack()
         self.initface.configure(highlightthickness=0)
         #常量定义
-        self.closebtnwidth = 100  #关闭按钮的大小
+        self.closebtnwidth = 70  #关闭按钮的大小
         self.Bigbtnwidth = winwidth / 3  #中央大按钮的大小
         self.btnwidth = winheight / 4  #普通按钮的大小
         self.padding1 = 40  #普通按钮之间的间隔
@@ -51,6 +55,8 @@ class initface():
         self.Bmovey = winheight / 4
         self.Cmovex = winwidth * 2 / 3 + self.padding1 + self.tomid
         self.midmove = 60  #中间层按钮偏移量
+        self.heartratelist = [80,90,69,110,102,79] #心跳速度列表
+        self.oxygenlist = [89,90,98,96,87,92] #血氧浓度列表
         #偏移量
         self.move = [
             [self.Amovex, self.Bmovey - self.btnwidth / 2 - self.padding1 / 2],
@@ -101,6 +107,9 @@ class initface():
         self.workimage = ImageTk.PhotoImage(
             Image.open("srcimage/looking.jpg").resize(
                 (int(self.Bigbtnwidth), int(self.Bigbtnwidth))))
+        self.closeimage = ImageTk.PhotoImage(
+            Image.open("srcimage/close.jpg").resize(
+                (int(self.closebtnwidth), int(self.closebtnwidth))))
         # 右边的三个按钮
         self.buttonA_1 = tk.Button(self.initface,
                                    image=self.bookimage,
@@ -162,18 +171,21 @@ class initface():
                                    height=self.btnwidth,
                                    width=self.btnwidth,
                                    relief="ridge",
-                                   bd=0)
+                                   bd=0,
+                                   command = self.gotoheartpage)
         self.buttonC_3.place(x=self.move[8][0], y=self.move[8][1])
         #关闭按钮
         self.closebtn = tk.Button(self.initface,
-                                  bitmap="error",
+                                  image=self.closeimage,
                                   width=self.closebtnwidth,
                                   height=self.closebtnwidth,
                                   bd=0,
                                   command=self.destroypage)
         self.closebtn.place(x=winwidth - self.closebtnwidth, y=0)
+        self.hearto2page = [] 
         #刷新显示图片
         self.showtitle()
+        
 
     def gotovideo(self):
         #self.initface.destroy()
@@ -185,36 +197,11 @@ class initface():
 
     def gotomusic(self):
         musicpage(self.master, winheight, winwidth)
-
-    #播放音乐
-    def play_music(threadName, delay):
-        filepath = r"D:\music\test.mp3"
-        py.mixer.init()
-        # 加载音乐
-        py.mixer.music.load(filepath)
-        py.mixer.music.play(start=0.0)
-        #播放时长，没有此设置，音乐不会播放，会一次性加载完
-        time.sleep(300)
-        py.mixer.music.stop()
-
-    def xz():
-        color = tkinter.colorchooser.askcolor()
-        colorstr = str(color)
-        print('打印字符串%s 切掉后=%s' % (colorstr, colorstr[-9:-2]))
-        lb.config(text=colorstr[-9:-2], background=colorstr[-9:-2])
-
-    #测量血压
-    def bloodpressure():
-        print("测量中")
-
-    #听音乐
-    def listenmusic():
-        print("听音乐")
-        _thread.start_new_thread(play_music, (
-            "Thread-1",
-            2,
-        ))
-
+    def gotohearto2(self):
+        self.hearto2page.append(hearto2page(self,self.master,winheight,winwidth))
+    #心率
+    def gotoheartpage(self):
+        heartpage(self,self.master, winheight, winwidth)
     #紧急呼救
     def emecall(self, event):
         #打开串口，波特率115200，无校验，停止位1，数据位8，连接超时2秒
@@ -235,7 +222,7 @@ class initface():
     def callfamily(self):
         callpage(self.master, winheight, winwidth)
 
-    def showtitle(self, ):
+    def showtitle(self):
         def video_loop():
             try:
                 while True:
@@ -255,24 +242,85 @@ class initface():
 
         video_loop()
         #self.face1.mainloop()
+    #测血压
+    def bloodpressuretest(self,callclass,theadname,name):
+        #打开串口，波特率9600，无校验，停止位1，数据位8，连接超时2秒
+        ser=serial.Serial("COM5", 9600, parity='N', stopbits=1, bytesize=8, timeout=5)
 
-    #计算两点的距离
-    def distance(self, x1, y1, x2, y2):
-        return math.sqrt(math.pow((x1 - x2), 2) + math.pow((y1 - y2), 2))
-
-    #判断某个点是否在圆的范围内
-    def isincircle(self, x, y, x0, y0, radius):
-        return self.distance(x, y, x0, y0) < radius
-
+        #开始测量
+        ser.write('AT+ST:1\r\n'.encode())
+        time.sleep(15)
+        #等待测量完成后读取数据，取最后U1开头即可
+        flag = False
+        for item in ser.readlines():
+            string = bytes.decode(item)
+            if string[1] == "1":
+                #此时输出数据有效
+                flag = True
+                result = self.resolvestr2(string[3:])
+                break
+        if not flag:
+            result="false"
+            callclass.showbadresult()
+        else:
+            callclass.showresult(result)
     #关闭当前界面
     def destroypage(self):
         self.master.destroy()
+    #开启多线程
+    def startnewthread(self):
+        _thread.start_new_thread(self.printnum,("threadname",1))
+        _thread.start_new_thread(self.drawline,("threadname2",1))
+    #读取数据，刷新显示
+    def printnum(self,str,x):
+        while(1):
+            #獲取字符串長度
+            serlen = ser.inWaiting()
+            #打印字符串
+            string = bytes.decode(ser.read(serlen))
+            arr = self.resolvestr(string)
+            if arr[0]!=-1:
+                self.heartratelist.append(arr[0])
+                self.oxygenlist.append(arr[1])
+            else:
+                if len(self.heartratelist)>0:
+                    self.heartratelist.append(self.heartratelist[-1])
+                    self.oxygenlist.append(self.oxygenlist[-1])
+            #程序延時1s
+            time.sleep(1)
+    def drawline(self,str,x):
+        while(1):
+            self.hearto2page[0].drawline()
+            time.sleep(1)
+    #将字符串处理成可用数据
+    def resolvestr(self,_str):
+        array = _str.split(',')
+        arrayr = []
+        for item in array:
+            try:
+                item = int(item)
+            except:
+                item = -1
+            arrayr.append(item)
+        return arrayr
+    def resolvestr2(self,_str):
+        array = _str.split(',')
+        arrayr = []
+        for item in array:
+            try:
+                item = int(item)
+            except:
+                pass
+            arrayr.append(item)
+        return arrayr
 
 
 if __name__ == '__main__':
     root = tk.Tk()
     #全屏应用
     root.attributes("-fullscreen", True)
+    # 串口初始化
+    #ser=serial.Serial('COM6',115200,parity='N',stopbits=1,bytesize=8,timeout=10)
     #获取宽高
     winwidth = root.winfo_screenwidth()
     winheight = root.winfo_screenheight()

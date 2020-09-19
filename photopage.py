@@ -8,7 +8,9 @@ import cv2
 from PIL import Image, ImageTk
 import multiprocessing
 import glob
-from backbtn import backbtn
+from backbtn import backbtn #返回按钮
+from title import title
+from background import background
 winheight = 0
 winwidth = 0
 class photopage():
@@ -31,22 +33,25 @@ class photopage():
         #读取图片
         for n in range(0,len(self.imagelist)):
             self.imagereadlist.append(ImageTk.PhotoImage(self.goodimage(n)))
-        self.photopage=tk.Frame(self.master,width=self.winwidth,height=self.winheight)
+        self.photopage = tk.Canvas(self.master,bg="pink",width=self.winwidth,height=self.winheight)
         self.photopage.place(x=0,y=0)
-        self.photocanvas = tk.Canvas(self.photopage,bg="pink",width=self.winwidth,height=self.winheight)
-        self.photocanvas.place(x=0,y=0)
-        self.photocanvas.configure(highlightthickness=0)
+        self.photopage.configure(highlightthickness=0)
+         #背景
+        bg = background(self.photopage,self.winheight,self.winwidth,"call")
+        #返回按钮
+        backbtn(self.photopage,self.winheight,self.winwidth)
+        #标题
+        title(self.photopage,self.winheight,self.winwidth,"看照片")
         #图片缩略图放置
         for n in range(0,len(self.imagelist)):
-            locals()['self.tempbutton'+str(n)] = tk.Button(self.photocanvas,image=self.imagereadlist[n], width=self.photowidth,height=self.photowidth,command=self.returnfun(n),bd=0)
+            locals()['self.tempbutton'+str(n)] = tk.Button(self.photopage,image=self.imagereadlist[n], width=self.photowidth,height=self.photowidth,command=self.returnfun(n),bd=0)
             locals()['self.tempbutton'+str(n)].place(x=n%7*(self.photowidth+self.photopadding)+self.photopadding,y=int((n+1)/8)*(self.photowidth+self.photopadding)+self.topheight)
-        backbtn(self.photopage,self.winheight,self.winwidth)
-
+        bg.showimage()
     def back(self):
         self.photopage.destroy()
         #self.vbar.destory()
     def showbigimage(self,x):
-        bigimage(self.photocanvas,x,self.winheight,self.winwidth,self.imagelist)
+        bigimage(self.photopage,x,self.winheight,self.winwidth,self.imagelist)
     def returnfun(self,x):
         return lambda:self.showbigimage(x)
     def goodimage(self,id):
